@@ -9,7 +9,8 @@ from functools import partial
 from shapely.ops import transform
 from functools import partial
 import pyproj
-import os
+import matplotlib.cm as cm
+import matplotlib.patches as mpatches
 
 def plot_road(trajectory, width=22.5, style='-', color='black'):
     line = LineString(trajectory)
@@ -26,79 +27,48 @@ def plot_road(trajectory, width=22.5, style='-', color='black'):
     # 绘制道路的两侧线
     ax.plot(*left_line.xy, style, color=color)
     ax.plot(*right_line.xy, style, color=color)
+    # ax.plot(*line.xy, '--', color=color)  # 使用虚线绘制中心线
 
-
-def plot_trajectories(trajectories):
+def check_point_on_road(args):
+    point_data, trajectories, i = args
+    point = Point(point_data['lon'], point_data['lat'])
     for trajectory in trajectories:
-        coords = np.array(trajectory)
-        ax.plot(coords[:, 0], coords[:, 1], '--', color='gray')  # 绘制中心线
-        plot_road(coords, width=22.5, style='-', color='black')  # 绘制道路
+        road = LineString(trajectory)
+        if road.buffer(0.0001).contains(point):  # Adjust the buffer size as needed
+            return (point_data['lon'], point_data['lat'], str(point_data['time']), i)
+    return None
 
-# if __name__ == "__main__":
-#     file = './路网数据/S50北五环.txt'
-#     with open(file, 'r') as f:
-#         data = eval(f.read())
-#
-#     #readtxt('log.txt')
-#
-#     fig, ax = plt.subplots(figsize=(10, 8))
-#
-#     # 绘制道路
-#     plot_trajectories(data)
-#
-#     plt.show()
+def plot_trajectories(trajectories, dict_data):
+    colors = cm.rainbow(np.linspace(0, 1, len(dict_data)))
+    args = []
+    patches = [] #图例
+    for i, (car_id, car_data) in enumerate(dict_data.items()):
+        for point_data in car_data:
+            args.append((point_data, trajectories, i))
+        patches.append(mpatches.Patch(color=colors[i], label=car_id))
 
+    with Pool() as p:
+        for result in tqdm(p.imap(check_point_on_road, args), total=len(args)):
+            if result is not None:
+                lon, lat, time, i = result
+                ax.scatter(lon, lat, color=colors[i])
 
-def plot_multiple_trajectories(directory):
-    global  fig, ax
-    # 遍历指定目录下的所有txt文件
-    for filename in os.listdir(directory):
-        if filename.endswith(".txt"):
-            # 创建新的图形对象和Axes对象
-            fig, ax = plt.subplots(figsize=(10, 8))
-            xlim = None
-            ylim = None
+    plt.legend(handles=patches)
 
-            filepath = os.path.join(directory, filename)
-            with open(filepath, 'r') as f:
-                data = eval(f.read())
+if __name__ == "__main__":
+    file = './路网数据/北三环.txt'
+    with open(file, 'r') as f:
+        data = eval(f.read())
 
-            # 找到所有轨迹中的最小和最大横纵坐标
-            for trajectory in data:
-                coords = np.array(trajectory)
-                traj_xlim = [np.min(coords[:, 0]), np.max(coords[:, 0])]
-                traj_ylim = [np.min(coords[:, 1]), np.max(coords[:, 1])]
+    readtxt('log.txt')
 
-                # 更新整体的横纵坐标范围
-                if xlim is None:
-                    xlim = traj_xlim
-                else:
-                    xlim = [min(xlim[0], traj_xlim[0]), max(xlim[1], traj_xlim[1])]
+    fig, ax = plt.subplots(figsize=(10, 8))
 
-                if ylim is None:
-                    ylim = traj_ylim
-                else:
-                    ylim = [min(ylim[0], traj_ylim[0]), max(ylim[1], traj_ylim[1])]
+    # 绘制道路
+    for trajectory in data:
+        plot_road(trajectory)
 
-            # 计算纵横比例
-            x_length = xlim[1] - xlim[0]
-            y_length = ylim[1] - ylim[0]
-            aspect_ratio = y_length / x_length
+    plot_trajectories(data, dict_data)
 
-            # 设置横纵坐标范围
-            ax.set_xlim(xlim)
-            ax.set_ylim(ylim)
-
-            # 设置纵横比例
-            ax.set_aspect(aspect_ratio)
-
-            # 绘制道路
-            plot_trajectories(data)
-
-            # 显示图形
-            plt.show()
-
-
-# 使用示例
-directory = './路网数据/'
-plot_multiple_trajectories(directory)
+    plt.axis('equal')
+    plt.show()
