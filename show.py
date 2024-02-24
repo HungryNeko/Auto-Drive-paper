@@ -60,7 +60,7 @@ if __name__ == "__main__":
     with open(file, 'r') as f:
         data = eval(f.read())
 
-    readtxt('log.txt')
+    #readtxt('log.txt')
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
