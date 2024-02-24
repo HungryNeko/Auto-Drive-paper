@@ -79,7 +79,7 @@ if __name__ == "__main__":
     point2 = [116.44103, 39.97796]
 
     # 读取车辆数据
-    357readtxt('log.txt')
+    #readtxt('log.txt')
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
