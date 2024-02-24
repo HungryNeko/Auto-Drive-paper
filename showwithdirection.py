@@ -35,22 +35,28 @@ def plot_road(trajectory, width=22.5, style='-', color='black'):
 
 # 定义检查车辆位置函数
 def check_point_on_road(args):
-    point_data, trajectories, i = args
+    point_data, trajectories, i, line = args
     point = Point(point_data['lon'], point_data['lat'])
     for trajectory in trajectories:
         road = LineString(trajectory)
-        if road.buffer(0.0001).contains(point):  # Adjust the buffer size as needed
-            return (point_data['lon'], point_data['lat'], str(point_data['time']), i)
+        if road.buffer(0.0001).contains(point):  # 根据需要调整缓冲区大小
+            return (point_data['lon'], point_data['lat'], str(point_data['time']), i, line)
     return None
 
 # 定义绘制轨迹函数
 def plot_trajectories(trajectories, point1, point2):
     # 绘制道路
-    for trajectory in data:
+    for trajectory in trajectories:
         plot_road(trajectory)
 
     # 绘制垂线
     plt.plot([point1[0], point2[0]], [point1[1], point2[1]], color='red')
+
+    # 计算直线的斜率
+    if point2[0] - point1[0] != 0:
+        k = (point2[1] - point1[1]) / (point2[0] - point1[0])
+    else:
+        k = float('inf')
 
     # 绘制车辆位置
     colors = cm.rainbow(np.linspace(0, 1, len(dict_data)))
@@ -58,14 +64,21 @@ def plot_trajectories(trajectories, point1, point2):
     patches = []  # 图例
     for i, (car_id, car_data) in enumerate(dict_data.items()):
         for point_data in car_data:
-            args.append((point_data, trajectories, i))
+            args.append((point_data, trajectories, i, k))
         patches.append(mpatches.Patch(color=colors[i], label=car_id))
 
     with Pool() as p:
         for result in tqdm(p.imap(check_point_on_road, args), total=len(args)):
             if result is not None:
-                lon, lat, time, i = result
-                ax.scatter(lon, lat, color=colors[i])
+                lon, lat, time, i, line = result
+                # 计算车辆和垂线的斜率
+                if line == float('inf'):
+                    car_line = float('inf')
+                else:
+                    car_line = (lat - point1[1]) / (lon - point1[0])
+                # 判断车辆行驶方向，根据斜率关系判断
+                if line * car_line > 0:
+                    ax.scatter(lon, lat, color=colors[i])
 
     plt.legend(handles=patches)
 
@@ -79,7 +92,7 @@ if __name__ == "__main__":
     point2 = [116.44103, 39.97796]
 
     # 读取车辆数据
-    #readtxt('log.txt')
+    readtxt('log.txt')
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
