@@ -34,70 +34,59 @@ def plot_road(trajectory, width=22.5, style='-', color='black'):
     # ax.plot(*line.xy, '--', color=color)  # 使用虚线绘制中心线
 
 # 定义检查车辆位置函数
-def check_point_on_road(args):
-    point_data, trajectories, i, line = args
+def check_point_on_road(args):#增加angle判断行驶方向
+    point_data, trajectories, i = args
     point = Point(point_data['lon'], point_data['lat'])
     for trajectory in trajectories:
         road = LineString(trajectory)
         if road.buffer(0.0001).contains(point):  # 根据需要调整缓冲区大小
-            return (point_data['lon'], point_data['lat'], str(point_data['time']), i, line)
+            if angle1 <= point_data['angle'] <= angle2:
+                return (point_data['lon'], point_data['lat'], str(point_data['time']), i)
     return None
 
+
+
 # 定义绘制轨迹函数
-def plot_trajectories(trajectories, point1, point2):
+def plot_trajectories(trajectories):
     # 绘制道路
-    for trajectory in trajectories:
-        plot_road(trajectory)
-
-    # 绘制垂线
-    plt.plot([point1[0], point2[0]], [point1[1], point2[1]], color='red')
-
-    # 计算直线的斜率
-    if point2[0] - point1[0] != 0:
-        k = (point2[1] - point1[1]) / (point2[0] - point1[0])
-    else:
-        k = float('inf')
-
-    # 绘制车辆位置
     colors = cm.rainbow(np.linspace(0, 1, len(dict_data)))
     args = []
     patches = []  # 图例
     for i, (car_id, car_data) in enumerate(dict_data.items()):
         for point_data in car_data:
-            args.append((point_data, trajectories, i, k))
+            args.append((point_data, trajectories, i))
         patches.append(mpatches.Patch(color=colors[i], label=car_id))
 
     with Pool() as p:
         for result in tqdm(p.imap(check_point_on_road, args), total=len(args)):
             if result is not None:
-                lon, lat, time, i, line = result
-                # 计算车辆和垂线的斜率
-                if line == float('inf'):
-                    car_line = float('inf')
-                else:
-                    car_line = (lat - point1[1]) / (lon - point1[0])
-                # 判断车辆行驶方向，根据斜率关系判断
-                if line * car_line > 0:
-                    ax.scatter(lon, lat, color=colors[i])
+                lon, lat, time, i = result
+                ax.scatter(lon, lat, color=colors[i])
 
     plt.legend(handles=patches)
 
+angle1=0
+angle2=180
 if __name__ == "__main__":
     file = './路网数据/北三环.txt'
     with open(file, 'r') as f:
         data = eval(f.read())
 
     # 设置垂线的两个端点坐标
-    point1 = [116.43249, 39.95362]
-    point2 = [116.44103, 39.97796]
+    #point1 = [116.43249, 39.95362]
+    #point2 = [116.44103, 39.97796]
 
     # 读取车辆数据
     readtxt('log.txt')
 
     fig, ax = plt.subplots(figsize=(10, 8))
+    
+    # 绘制道路
+    for trajectory in data:
+        plot_road(trajectory)
 
     # 调用绘制轨迹函数
-    plot_trajectories(data, point1, point2)
+    plot_trajectories(data)
 
     plt.axis('equal')
     plt.show()
