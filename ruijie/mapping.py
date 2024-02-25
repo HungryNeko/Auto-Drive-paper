@@ -18,7 +18,7 @@ def check_point_on_road(args):
     point = Point(point_data['lon'], point_data['lat'])
     for trajectory in trajectories:
         road = LineString(trajectory)
-        if road.buffer(0.0001).contains(point):  # Adjust the buffer size as needed
+        if road.buffer(0.0002).contains(point):  # Adjust the buffer size as needed
             return (point_data['lon'], point_data['lat'], str(point_data['time']), i)
     return None
 
