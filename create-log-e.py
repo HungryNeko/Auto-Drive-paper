@@ -12,10 +12,11 @@ def extract_data(file_path):
                 elements = line.strip().split(",")
                 if len(elements) >= 4:  # 确保数据包含id、经度和纬度
                     id = elements[0]
+                    time=elements[1]
                     longitude = elements[2]
                     latitude = elements[3]
-                    if id and longitude and latitude:  # 确保数据非空
-                        yield f"{id},{longitude},{latitude}"
+                    if id and longitude and latitude and time:  # 确保数据非空
+                        yield f"{id},{time},{longitude},{latitude}"
     except Exception as e:
         print(f"Error processing file {file_path}: {e}")
         pass
