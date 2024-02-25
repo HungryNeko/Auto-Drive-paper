@@ -9,7 +9,7 @@ from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 
 
-def is_vehicle_on_road_parallel(car, road_coords, lane_width=11.25):
+def is_vehicle_on_road_parallel(car, road_coords, angle_range=None, lane_width=11.25):
     lon, lat = car['lon'], car['lat']
 
     # Assuming EPSG:4326 for lon/lat and EPSG:3857 for projected coordinates
@@ -23,11 +23,18 @@ def is_vehicle_on_road_parallel(car, road_coords, lane_width=11.25):
     road_line = LineString(road_coords_proj)
 
     distance = vehicle_point.distance(road_line)
-    return distance <= lane_width
+
+    # 如果提供了角度范围，则进行角度判断
+    if angle_range:
+        angle = car['angle']
+        angle_within_range = angle_range[0] <= angle <= angle_range[1]
+        return distance <= lane_width and angle_within_range
+    else:
+        return distance <= lane_width
 
 
 if __name__ == '__main__':
-    file = './路网数据/北三环东路.txt'
+    file = './路网数据/北三环.txt'#原来是北三环东路
     with open(file, 'r') as f:
         road_coords = eval(f.read())
     road_coords = [coord for sublist in road_coords for coord in sublist]
@@ -36,12 +43,13 @@ if __name__ == '__main__':
 
     # 用于存储符合条件的数据
     filtered_data = []
+    angle_range = (0, 180)  # 角度范围为0到180度，如果不需要角度判断，可以将此行注释掉或将angle_range参数设为None
 
     # 使用并行加速
     with ProcessPoolExecutor() as executor:
         for car_list in tqdm(dict_data.values(), desc="Processing cars"):
             # 将is_vehicle_on_road_parallel函数应用于car_list中的每个car
-            result = list(executor.map(is_vehicle_on_road_parallel, car_list, [road_coords] * len(car_list)))
+            result = list(executor.map(is_vehicle_on_road_parallel, car_list, [road_coords] * len(car_list), [angle_range] * len(car_list)))
             # 将符合条件的车辆数据加入filtered_data
             filtered_data.extend([car for car, is_on_road in zip(car_list, result) if is_on_road])
 
