@@ -22,14 +22,20 @@ def is_vehicle_on_road(car, road_coords, lane_width=11.25):
 
 def process_file(input_file, output_file, road_coords):
     try:
+        total_lines = sum(1 for line in open(input_file))  # 获取总行数
         with open(input_file, 'r') as f_in, open(output_file, 'w') as f_out:
-            for line in f_in:
+            for i, line in enumerate(f_in, 1):
                 id, lon, lat = line.strip().split(',')
                 car = {'lon': float(lon), 'lat': float(lat)}
                 if is_vehicle_on_road(car, road_coords):
                     f_out.write(f"{id},{lon},{lat}\n")
+                # 计算剩余行数并显示
+                remaining_lines = total_lines - i
+                print(f"\rProcessing: Line {i}/{total_lines}, Remaining: {remaining_lines}", end='', flush=True)
+            print("\nProcessing complete.")
     except Exception as e:
-        print(f"Error processing file '{input_file}': {e}")
+        print(f"\nError processing file '{input_file}': {e}")
+
 
 if __name__ == '__main__':
     # Path to the road coordinates file (北三环.txt)

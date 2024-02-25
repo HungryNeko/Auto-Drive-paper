@@ -55,12 +55,39 @@ def plot_trajectories(trajectories, dict_data):
 
     plt.legend(handles=patches)
 
+
+def readtxt(root):
+    with open(root, 'r') as log_file:
+        lines = log_file.readlines()
+
+    for line in lines:
+        try:
+            parts = line.strip().split(',')
+
+            dict_data.setdefault(parts[0], []).append({
+                'time': datetime.datetime.strptime(parts[1], "%Y-%m-%d %H:%M:%S"),
+                'lon': float(parts[5]),
+                'lat': float(parts[6]),
+                'speed': float(parts[2]),
+                'acceleration': float(parts[3]),
+                'angle': float(parts[4]),
+                # 'nearest_road_id': '',
+                # 'nearest_road_name': ''
+            })
+
+        except IndexError:
+            # print(f"Error in line : {line}")
+            continue  # Skip to the next iteration
+        except ValueError:
+            continue
+    print('read finished')
+
 if __name__ == "__main__":
     file = './路网数据/北三环.txt'
     with open(file, 'r') as f:
         data = eval(f.read())
 
-    #readtxt('log.txt')
+    readtxt('log.txt')
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
