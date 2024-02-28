@@ -1,78 +1,85 @@
-import pandas as pd
+import pyproj
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-from shapely.geometry import Point, LineString
-from pyproj import CRS, Transformer
-from read import readtxt, dict_data
 from tqdm import tqdm
-from concurrent.futures import ProcessPoolExecutor
+import matplotlib.cm as cm
+from functools import partial
+import matplotlib.pyplot as plt
+from multiprocessing import Pool
+from shapely.ops import transform
+from read import readtxt, dict_data  # Assuming readtxt and dict_data functions are defined in the 'read' module
+import matplotlib.patches as mpatches
+from shapely.geometry import Point, LineString, Polygon
+
+def plot_road(trajectory, width=11.25, style='-', color='black'):
+    line = LineString(trajectory)
+    transformer = pyproj.Transformer.from_crs('epsg:4490', 'epsg:32650', always_xy=True)
+    line_transformed = transform(transformer.transform, line)
+    left_line = line_transformed.parallel_offset(width, 'left')
+    right_line = line_transformed.parallel_offset(width, 'right')
+    transformer = pyproj.Transformer.from_crs('epsg:32650', 'epsg:4490', always_xy=True)
+    left_line = transform(transformer.transform, left_line)
+    right_line = transform(transformer.transform, right_line)
+    ax.plot(*left_line.xy, style, color=color)
+    ax.plot(*right_line.xy, style, color=color)
+    # ax.plot(*line.xy, '--', color=color)  # 使用虚线绘制中心线
+
+def create_road_polygon(trajectory):
+    line = LineString(trajectory)
+    transformer = pyproj.Transformer.from_crs('epsg:4490', 'epsg:32650', always_xy=True)
+    line_transformed = transform(transformer.transform, line)
+    left_line = line_transformed.parallel_offset(11.25, 'left')
+    right_line = line_transformed.parallel_offset(11.25, 'right')
+    transformer = pyproj.Transformer.from_crs('epsg:32650', 'epsg:4490', always_xy=True)
+    left_line = transform(transformer.transform, left_line)
+    right_line = transform(transformer.transform, right_line)
+    road_polygon = Polygon(np.concatenate([left_line.xy, np.fliplr(right_line.xy)], axis=1).T)
+    return road_polygon
+
+def check_point_on_road(args):
+    point_data, road_polygons = args
+    point = Point(point_data['lon'], point_data['lat'])
+    for i, road_polygon in enumerate(road_polygons):
+        if road_polygon.contains(point):
+            return (point_data['lon'], point_data['lat'], str(point_data['time']), i)
+    return None
 
 
-def is_vehicle_on_road_parallel(car, road_coords, angle_range=None, lane_width=11.25):
-    lon, lat = car['lon'], car['lat']
+def plot_trajectories(trajectories, dict_data):
+    colors = cm.rainbow(np.linspace(0, 1, len(dict_data)))
+    args = []
+    patches = [] #图例
+    for i, (car_id, car_data) in enumerate(dict_data.items()):
+        car_color = colors[i % len(colors)]  # 使用取模运算确保颜色索引不超出范围
+        for point_data in car_data:
+            args.append((point_data, trajectories))  # 传递一个元组，包含点数据和道路多边形列表
+        patches.append(mpatches.Patch(color=car_color, label=car_id))
 
-    # Assuming EPSG:4326 for lon/lat and EPSG:3857 for projected coordinates
-    transformer = Transformer.from_crs(CRS('EPSG:4326'), CRS('EPSG:3857'), always_xy=True)
+    with Pool() as p:
+        for result in tqdm(p.imap(check_point_on_road, args), total=len(args)):
+            if result is not None:
+                lon, lat, time, i = result
+                ax.scatter(lon, lat, color=colors[i % len(colors)])  # 使用取模运算确保颜色索引不超出范围
 
-    # Make sure to pass both lon and lat to the transform method
-    vehicle_coords_proj = transformer.transform(lon, lat)
-    road_coords_proj = [transformer.transform(coord[0], coord[1]) for coord in road_coords]
-
-    vehicle_point = Point(vehicle_coords_proj)
-    road_line = LineString(road_coords_proj)
-
-    distance = vehicle_point.distance(road_line)
-
-    # 如果提供了角度范围，则进行角度判断
-    if angle_range:
-        angle = car['angle']
-        angle_within_range = angle_range[0] <= angle <= angle_range[1]
-        return distance <= lane_width and angle_within_range
-    else:
-        return distance <= lane_width
+    plt.legend(handles=patches)
 
 
-if __name__ == '__main__':
-    file = './路网数据/北三环.txt'#原来是北三环东路
+
+
+if __name__ == "__main__":
+    file = './路网数据/东三环北路.txt'
     with open(file, 'r') as f:
-        road_coords = eval(f.read())
-    road_coords = [coord for sublist in road_coords for coord in sublist]
+        data = eval(f.read())
 
-    readtxt('log.txt')
+    readtxt('log-temp.txt')
 
-    # 用于存储符合条件的数据
-    filtered_data = []
-    angle_range = (0, 180)  # 角度范围为0到180度，如果不需要角度判断，可以将此行注释掉或将angle_range参数设为None
+    fig, ax = plt.subplots(figsize=(10, 8))
 
-    # 使用并行加速
-    with ProcessPoolExecutor() as executor:
-        for car_list in tqdm(dict_data.values(), desc="Processing cars"):
-            # 将is_vehicle_on_road_parallel函数应用于car_list中的每个car
-            result = list(executor.map(is_vehicle_on_road_parallel, car_list, [road_coords] * len(car_list), [angle_range] * len(car_list)))
-            # 将符合条件的车辆数据加入filtered_data
-            filtered_data.extend([car for car, is_on_road in zip(car_list, result) if is_on_road])
+    road_polygons = [create_road_polygon(trajectory) for trajectory in data]
 
-    # Convert filtered_data to a DataFrame
-    df_filtered_data = pd.DataFrame(filtered_data)
+    for trajectory in data:
+        plot_road(trajectory)
 
-    # Create a single figure with subplots
-    fig, axes = plt.subplots(3, 1, figsize=(8, 12))
+    plot_trajectories(road_polygons, dict_data)
 
-    # Plot speed distribution
-    sns.histplot(df_filtered_data['speed'], stat="count", kde=True, color='blue', bins=30, ax=axes[0])
-    axes[0].set_title('Speed Distribution')
-
-    # Plot acceleration distribution
-    sns.histplot(df_filtered_data['acceleration'], stat="count", kde=True, color='green', bins=30, ax=axes[1])
-    axes[1].set_title('Acceleration Distribution')
-
-    # Plot angle distribution
-    sns.histplot(df_filtered_data['angle'], stat="count", kde=True, color='orange', bins=30, ax=axes[2])
-    axes[2].set_title('Angle Distribution')
-
-    # Adjust spacing between subplots
-    plt.subplots_adjust(hspace=0.5)
-
-    # Show the plot
+    plt.axis('equal')
     plt.show()
