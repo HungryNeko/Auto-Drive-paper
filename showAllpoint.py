@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 # 读取文件
-file_path = "log-E.txt"
+file_path = "log-temp.txt"
 with open(file_path, "r") as f:
     lines = f.readlines()
 

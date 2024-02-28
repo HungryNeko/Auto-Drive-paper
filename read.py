@@ -24,16 +24,16 @@ def readtxt(root):
     for line in lines:
         try:
             parts = line.strip().split(',')
-            lon, lat = float(parts[5]), float(parts[6])
-            gcj_lon, gcj_lat = wgs84_to_gcj02(lon, lat)
-            
+            lon, lat = float(parts[2]), float(parts[3])
+            #gcj_lon, gcj_lat = wgs84_to_gcj02(lon, lat)
+            #gcj_lon, gcj_lat =lon, lat
             dict_data.setdefault(parts[0], []).append({
                 'time': datetime.datetime.strptime(parts[1], "%Y-%m-%d %H:%M:%S"),
-                'lon': gcj_lon,
-                'lat': gcj_lat,
-                'speed': float(parts[2]),
-                'acceleration': float(parts[3]),
-                'angle': float(parts[4]),
+                'lon': lon,
+                'lat': lat,
+                #'speed': float(parts[2]),
+                #'acceleration': float(parts[3]),
+                #'angle': float(parts[4]),
                 # 'nearest_road_id': '',
                 # 'nearest_road_name': ''
             })

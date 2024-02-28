@@ -5,8 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f4dad532-8653-4c25-9f5e-96823cf4fbc3" name="更改" comment="">
+      <change afterPath="$PROJECT_DIR$/log-temp.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/maping.py" beforeDir="false" afterPath="$PROJECT_DIR$/maping.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/read.py" beforeDir="false" afterPath="$PROJECT_DIR$/read.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/show.py" beforeDir="false" afterPath="$PROJECT_DIR$/show.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/showAllpoint.py" beforeDir="false" afterPath="$PROJECT_DIR$/showAllpoint.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wgs84Togcj02.py" beforeDir="false" afterPath="$PROJECT_DIR$/wgs84Togcj02.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,8 +39,11 @@
   "keyToString": {
     "Python.calculation.executor": "Run",
     "Python.maping.executor": "Run",
+    "Python.read.executor": "Run",
     "Python.show.executor": "Run",
+    "Python.showAllpoint.executor": "Run",
     "Python.showwithdirection.executor": "Run",
+    "Python.wgs84Togcj02.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "main",
