@@ -1,6 +1,7 @@
 """
 change all coordinates in log-E and store in log-gcj
 """
+import os
 import warnings
 
 # 忽略特定类型的警告
@@ -53,12 +54,13 @@ def process_line(line):
     id_, timestamp, longitude, latitude = parts[0], parts[1], float(parts[2]), float(parts[3])
     gcj_longitude, gcj_latitude = wgs84togcj02(longitude, latitude)
     return f"{id_},{timestamp},{gcj_longitude},{gcj_latitude}\n"
-
+"""
+转换单个文件
 if __name__ == '__main__':
     freeze_support()
 
-    input_file = "../01/6275.txt"
-    output_file = "log-temp.txt"
+    input_file = "../01/6656.txt"
+    output_file = "log-6656.txt"
 
     # 获取推荐的进程数，即 CPU 的核心数
     recommended_processes = cpu_count()
@@ -75,4 +77,35 @@ if __name__ == '__main__':
                 f_out.write(result)
 
     print("转换完成，并已保存到", output_file)
+"""
+if __name__ == '__main__':
+    freeze_support()
 
+    input_directory = "../01/"
+    output_directory = "01-c/"
+
+    # 获取推荐的进程数，即 CPU 的核心数
+    recommended_processes = cpu_count()
+
+    # 手动设置进程数，你可以根据需要修改这个值
+    processes = min(recommended_processes, 16)  # 这里设置为推荐进程数和4之间的较小值
+
+    # 确保输出目录存在
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
+    # 获取01目录下所有文件
+    input_files = [f for f in os.listdir(input_directory) if os.path.isfile(os.path.join(input_directory, f))]
+
+    with Pool(processes=processes) as pool:
+        for input_file in input_files:
+            with open(os.path.join(input_directory, input_file), "r") as f_in:
+                lines = f_in.readlines()
+
+            output_file = os.path.join(output_directory, input_file)
+
+            with open(output_file, "w") as f_out:
+                for result in tqdm(pool.imap(process_line, lines), desc=f"Converting {input_file}", total=len(lines), unit=" lines"):
+                    f_out.write(result)
+
+            print(f"文件 {input_file} 转换完成，并已保存到 {output_file}")

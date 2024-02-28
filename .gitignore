@@ -1,4 +1,7 @@
 
 log.txt
 log-E.txt
-log-gcj.txt
+log-gcj/log-gcj.txt
+error_data-gcj-c.txt
+error_data.txt
+*.txt

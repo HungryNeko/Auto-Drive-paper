@@ -11,6 +11,7 @@ from datetime import datetime
 # 引入cacaltion.py中的函数
 from calculation import calculate, car_dict
 import concurrent.futures
+from tqdm import tqdm
 '''
 Descripttion: 读取所有file_name文件夹下的txt文件，并将车辆信息保存到car_dict的字典中 
 return value {*}
@@ -36,14 +37,17 @@ Descripttion: 覆盖原来的log.txt文件与error_data.txt文件，计算出车
 return value {*}
 '''
 if __name__ == "__main__":
-    folder_path = '../01'
-    with open('log.txt', 'w') as log_file: pass
-    with open('error_data.txt', 'w') as error_file: pass
+    folder_path = 'log-gcj'
+    with open('log-gcj-c.txt', 'w') as log_file: pass
+    with open('error_data-gcj-c.txt', 'w') as error_file: pass
     # Create a ThreadPoolExecutor
     with concurrent.futures.ThreadPoolExecutor() as executor:
         for root, dirs, files in os.walk(folder_path):
             executor.map(readin, files)
 
     # Create another ThreadPoolExecutor for cal_information
+    # 创建另一个 ThreadPoolExecutor 用于 cal_information
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(cal_information, range(1, 10357))
+        # 使用 tqdm 显示进度
+        for _ in tqdm(executor.map(cal_information, range(1, 10357)), total=10356, desc="Calculating information"):
+            pass

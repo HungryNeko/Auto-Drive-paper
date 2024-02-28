@@ -66,7 +66,7 @@ if __name__ == "__main__":
     with open(file, 'r') as f:
         data = eval(f.read())
 
-    readtxt('log-temp.txt')
+    readtxt('log-6656.txt')
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
