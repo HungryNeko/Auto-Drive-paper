@@ -2,23 +2,13 @@ import os
 from shapely.geometry import Point, LineString
 from pyproj import CRS, Transformer
 
-def is_vehicle_on_road(car, road_coords, lane_width=11.25):
-    lon, lat = car['lon'], car['lat']
-
-    # Assuming EPSG:4326 for lon/lat and EPSG:3857 for projected coordinates
-    transformer = Transformer.from_crs(CRS('EPSG:4326'), CRS('EPSG:3857'), always_xy=True)
-
-    # Transform vehicle coordinates to projected coordinates
-    vehicle_coords_proj = transformer.transform(lon, lat)
-    vehicle_point = Point(vehicle_coords_proj)
-
-    # Convert road coordinates to projected coordinates
-    road_coords_proj = [transformer.transform(coord[0], coord[1]) for coord in road_coords]
-    road_line = LineString(road_coords_proj)
-
-    # Check if the vehicle is within the specified lane width of the road
-    distance = vehicle_point.distance(road_line)
-    return distance <= lane_width
+def check_point_on_road(point_data, trajectories, i, buffer_size=0.0002):
+    point = Point(point_data['lon'], point_data['lat'])
+    for trajectory in trajectories:
+        road = LineString(trajectory)
+        if road.buffer(0.0002).contains(point): # 使用指定的缓冲区大小
+            return (point_data['lon'], point_data['lat'], str(point_data['time']), i)
+    return None
 
 def process_file(input_file, output_file, road_coords):
     try:
@@ -27,8 +17,9 @@ def process_file(input_file, output_file, road_coords):
             for i, line in enumerate(f_in, 1):
                 id, lon, lat = line.strip().split(',')
                 car = {'lon': float(lon), 'lat': float(lat)}
-                if is_vehicle_on_road(car, road_coords):
-                    f_out.write(f"{id},{lon},{lat}\n")
+                result = check_point_on_road(car, road_coords, i)
+                if result is not None:
+                    f_out.write(','.join(result) + '\n')
                 # 计算剩余行数并显示
                 remaining_lines = total_lines - i
                 print(f"\rProcessing: Line {i}/{total_lines}, Remaining: {remaining_lines}", end='', flush=True)
@@ -38,15 +29,15 @@ def process_file(input_file, output_file, road_coords):
 
 
 if __name__ == '__main__':
-    # Path to the road coordinates file (北三环.txt)
+    # 道路坐标文件路径 (北三环.txt)
     road_data_file = '路网数据/北三环.txt'
     with open(road_data_file, 'r') as f:
         road_coords = eval(f.read())
     road_coords = [coord for sublist in road_coords for coord in sublist]
 
-    # Input and output file paths
+    # 输入和输出文件路径
     input_file = 'log-E.txt'
     output_file = 'log-S.txt'
 
-    # Process the input file and save the filtered points to the output file
+    # 处理输入文件并将筛选后的点保存到输出文件
     process_file(input_file, output_file, road_coords)
