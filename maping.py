@@ -1,3 +1,11 @@
+"""
+用于计算和保存统计数据
+read读入车辆信息log（两种坐标系均可，是否有计算加速度等信息过均可）
+cleandata用于清空之前的内容
+anglelimit=[90.0,270.0]#目标>angle[0] <angle[1]用于筛选角度
+check_point_on_road(args)中有savedata的方法，记得更改save的文件名
+"""
+
 import pyproj
 import numpy as np
 from tqdm import tqdm
@@ -27,7 +35,7 @@ def check_point_on_road(args):
     point = Point(point_data['lon'], point_data['lat'])
     #print(point_data)
     #print(point_data['lon'], point_data['lat'])
-    save_load.cleandata("data东四环中路.txt")
+
     for road_polygon in road_polygons:
         if road_polygon.contains(point):
             save_load.savedata(point_data,"data东四环中路.txt")#将筛选出的车辆数据存入txt
@@ -66,7 +74,7 @@ def plot_trajectories(trajectories, dict_data):
 
 anglelimit=[90.0,270.0]#目标>angle[0] <angle[1]
 if __name__ == "__main__":
-
+    save_load.cleandata("data东四环中路.txt")
     file = './路网数据/东四环中路.txt'
     with open(file, 'r') as f:
         data = eval(f.read())
