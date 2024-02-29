@@ -32,6 +32,7 @@ def wgs84togcj02(lng,lat):
     dlng = (dlng * 180.0) / (a / sqrtmagic * math.cos(radlat) * pi)
     mglat = lat + dlat
     mglng = lng + dlng
+    #print([mglng, mglat])
     return [mglng, mglat]
 
 def transformlat(lng, lat):

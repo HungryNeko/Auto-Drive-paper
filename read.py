@@ -18,17 +18,23 @@ road_info_dict = {}
 
 
 def readtxt(root,full=False,wgs84=False):
+
     with open(root, 'r') as log_file:
         lines = log_file.readlines()
 
     for line in tqdm(lines, desc=f"Processing {root}"):
+
         try:
             parts = line.strip().split(',')
             lon, lat = float(parts[-2]), float(parts[-1])
             #print(lon,lat)
+            gcj=[]
             if wgs84==True:
                 gcj=wgs84Togcj02.wgs84togcj02(lon,lat)
-                lon=gcj[0],lat=gcj,[1]
+                #print(gcj)
+                lon=float(gcj[0])
+                lat=float(gcj[1])
+
             if full:
                 dict_data.setdefault(parts[0], []).append({
                     'time': datetime.datetime.strptime(parts[1], "%Y-%m-%d %H:%M:%S"),
@@ -40,6 +46,7 @@ def readtxt(root,full=False,wgs84=False):
                     # 'nearest_road_id': '',
                     # 'nearest_road_name': ''
                 })
+                #print(lon, lat)
             else:
                 dict_data.setdefault(parts[0], []).append({
                     'time': datetime.datetime.strptime(parts[1], "%Y-%m-%d %H:%M:%S"),
@@ -51,9 +58,13 @@ def readtxt(root,full=False,wgs84=False):
                     # 'nearest_road_id': '',
                     # 'nearest_road_name': ''
                 })
-        except Exception:
+                #print(lon, lat)
+
+        except Exception as e:
             #print(f"Error in line : {line}")
+            #print(e)
             continue  # Skip to the next iteration
+
 
 
 def readroad():
