@@ -17,13 +17,13 @@ dict_data = {}
 road_info_dict = {}
 
 
-def readtxt(root,full=False,wgs84=False):
+def readtxt(root,full=False,wgs84=False,limit=False):
 
     with open(root, 'r') as log_file:
         lines = log_file.readlines()
-
+    count=0
     for line in tqdm(lines, desc=f"Processing {root}"):
-
+        count+=1
         try:
             parts = line.strip().split(',')
             lon, lat = float(parts[-2]), float(parts[-1])
@@ -64,7 +64,8 @@ def readtxt(root,full=False,wgs84=False):
             #print(f"Error in line : {line}")
             #print(e)
             continue  # Skip to the next iteration
-
+        if count==limit:
+            break
 
 
 def readroad():

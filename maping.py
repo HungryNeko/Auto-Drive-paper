@@ -27,9 +27,9 @@ def check_point_on_road(args):
     #print(point_data['lon'], point_data['lat'])
     for road_polygon in road_polygons:
         if road_polygon.contains(point):
-            if not anglelimit:
+            if anglelimit==None:
                 return (point_data['speed'], point_data['acceleration'], point_data['angle'])
-            if point_data['angle']>anglelimit[0]&point_data['angle']<anglelimit[1]:
+            if (point_data['angle']>anglelimit[0])&(point_data['angle']<anglelimit[1]):
                 return (point_data['speed'], point_data['acceleration'], point_data['angle'])
     return None
 
@@ -60,8 +60,9 @@ def plot_trajectories(trajectories, dict_data):
     axs[2].set_title('angle distribution')
     plt.show()
 
+anglelimit=[90.0,270.0]#目标>angle[0] <angle[1]
 if __name__ == "__main__":
-    anglelimit=[90,270]#目标>angle[0] <angle[1]
+
     file = './路网数据/东四环中路.txt'
     with open(file, 'r') as f:
         data = eval(f.read())
