@@ -7,10 +7,13 @@ class DateTimeEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 def savedata(data, filepath):
+    if not isinstance(data, list):
+        data = [data]  # 如果数据不是列表，将其包装在列表中
     with open(filepath, 'a') as f:
         for entry in data:
             json.dump(entry, f, cls=DateTimeEncoder)
             f.write('\n')
+
 
 def loaddata(filepath):
     data = []
@@ -33,9 +36,11 @@ test_data = [
     {'id': 2, 'time': datetime.datetime(2008, 2, 5, 18, 30, 15), 'lon': 116.43465281165018, 'lat': 39.90914907074822, 'speed': 2.7397531491920715, 'acceleration': 0.0036810899982913964, 'angle': 189.49793934552773},
     {'id': 3, 'time': datetime.datetime(2008, 2, 5, 19, 45, 38), 'lon': 116.43465281165018, 'lat': 39.90914907074822, 'speed': 2.7397531491920715, 'acceleration': 0.0036810899982913964, 'angle': 189.49793934552773}
 ]
+t={'id': 1, 'time': datetime.datetime(2008, 2, 5, 17, 21, 21), 'lon': 116.43465281165018, 'lat': 39.90914907074822, 'speed': 2.7397531491920715, 'acceleration': 0.0036810899982913964, 'angle': 189.49793934552773}
 if __name__ == "__main__":
     # 将数据保存到文件
-    savedata(test_data, 'testdata.txt')
+    cleandata('testdata.txt')
+    savedata(t, 'testdata.txt')
 
     # 从文件中加载数据
     loaded_data = loaddata('testdata.txt')
