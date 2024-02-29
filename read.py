@@ -37,6 +37,7 @@ def readtxt(root,full=False,wgs84=False,limit=False):
 
             if full:
                 dict_data.setdefault(parts[0], []).append({
+                    'id':parts[0],
                     'time': datetime.datetime.strptime(parts[1], "%Y-%m-%d %H:%M:%S"),
                     'lon': lon,
                     'lat': lat,
@@ -49,6 +50,7 @@ def readtxt(root,full=False,wgs84=False,limit=False):
                 #print(lon, lat)
             else:
                 dict_data.setdefault(parts[0], []).append({
+                    'id': parts[0],
                     'time': datetime.datetime.strptime(parts[1], "%Y-%m-%d %H:%M:%S"),
                     'lon': lon,
                     'lat': lat,

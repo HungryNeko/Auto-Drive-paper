@@ -25,8 +25,9 @@ def check_point_on_road(args):
     #print(args)
     point_data, road_polygons = args
     point = Point(point_data['lon'], point_data['lat'])
-    print(point_data)
+    #print(point_data)
     #print(point_data['lon'], point_data['lat'])
+    save_load.cleandata("data东四环中路.txt")
     for road_polygon in road_polygons:
         if road_polygon.contains(point):
             save_load.savedata(point_data,"data东四环中路.txt")#将筛选出的车辆数据存入txt
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     with open(file, 'r') as f:
         data = eval(f.read())
 
-    readtxt('log.txt',full=True,wgs84=True,limit=100)#full= log是否计算过
+    readtxt('log.txt',full=True,wgs84=True,limit=-1)#full= log是否计算过
 
 
     road_polygons = [create_road_polygon(trajectory) for trajectory in data]
