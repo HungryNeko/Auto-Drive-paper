@@ -7,6 +7,7 @@ from multiprocessing import Pool
 from shapely.ops import transform
 from read import readtxt, dict_data  # Assuming readtxt and dict_data functions are defined in the 'read' module
 from shapely.geometry import Point, LineString, Polygon
+import save_load
 
 def create_road_polygon(trajectory):
     line = LineString(trajectory)
@@ -24,9 +25,11 @@ def check_point_on_road(args):
     #print(args)
     point_data, road_polygons = args
     point = Point(point_data['lon'], point_data['lat'])
+    print(point_data)
     #print(point_data['lon'], point_data['lat'])
     for road_polygon in road_polygons:
         if road_polygon.contains(point):
+            save_load.savedata(point_data,"data东四环中路.txt")#将筛选出的车辆数据存入txt
             if anglelimit==None:
                 return (point_data['speed'], point_data['acceleration'], point_data['angle'])
             if (point_data['angle']>anglelimit[0])&(point_data['angle']<anglelimit[1]):
@@ -67,7 +70,7 @@ if __name__ == "__main__":
     with open(file, 'r') as f:
         data = eval(f.read())
 
-    readtxt('log.txt',full=True,wgs84=True)#full= log是否计算过
+    readtxt('log.txt',full=True,wgs84=True,limit=100)#full= log是否计算过
 
 
     road_polygons = [create_road_polygon(trajectory) for trajectory in data]
