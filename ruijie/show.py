@@ -1,45 +1,48 @@
-import pyproj
+'''
+Descripttion: 
+version: 
+Author: 胡睿杰
+Date: 2024-01-27 11:22:45
+LastEditors: Andy
+LastEditTime: 2024-02-25 20:37:20
+'''
 import numpy as np
-from tqdm import tqdm
-import matplotlib.cm as cm
-from functools import partial
 import matplotlib.pyplot as plt
-from multiprocessing import Pool
-from shapely.ops import transform
+from shapely.geometry import Point, LineString
+from pyproj import CRS, Transformer
 from read import readtxt, dict_data  # Assuming readtxt and dict_data functions are defined in the 'read' module
+from multiprocessing import Pool
+from tqdm import tqdm
+from functools import partial
+from shapely.ops import transform
+from functools import partial
+import pyproj
+import matplotlib.cm as cm
 import matplotlib.patches as mpatches
-from shapely.geometry import Point, LineString, Polygon
+from pyproj import CRS, Transformer, Proj
 
-def plot_road(trajectory, width=11.25, style='-', color='black'):
+def plot_road(trajectory, width=22.5, style='-', color='black'):
     line = LineString(trajectory)
-    transformer = pyproj.Transformer.from_crs('epsg:4490', 'epsg:32650', always_xy=True)
+    # 创建一个转换器，将WGS84坐标转换为UTM坐标
+    transformer = Transformer.from_crs('epsg:4326', 'epsg:32650', always_xy=True)
     line_transformed = transform(transformer.transform, line)
-    left_line = line_transformed.parallel_offset(width, 'left')
-    right_line = line_transformed.parallel_offset(width, 'right')
-    transformer = pyproj.Transformer.from_crs('epsg:32650', 'epsg:4490', always_xy=True)
+    # 创建道路的两侧线
+    left_line = line_transformed.parallel_offset(width / 2, 'left')
+    right_line = line_transformed.parallel_offset(width / 2, 'right')
+    # 将UTM坐标转换回WGS84坐标
+    transformer = Transformer.from_crs('epsg:32650', 'epsg:4326', always_xy=True)
     left_line = transform(transformer.transform, left_line)
     right_line = transform(transformer.transform, right_line)
+    # 绘制道路的两侧线
     ax.plot(*left_line.xy, style, color=color)
     ax.plot(*right_line.xy, style, color=color)
-    # ax.plot(*line.xy, '--', color=color)  # 使用虚线绘制中心线
-
-def create_road_polygon(trajectory):
-    line = LineString(trajectory)
-    transformer = pyproj.Transformer.from_crs('epsg:4490', 'epsg:32650', always_xy=True)
-    line_transformed = transform(transformer.transform, line)
-    left_line = line_transformed.parallel_offset(11.25, 'left')
-    right_line = line_transformed.parallel_offset(11.25, 'right')
-    transformer = pyproj.Transformer.from_crs('epsg:32650', 'epsg:4490', always_xy=True)
-    left_line = transform(transformer.transform, left_line)
-    right_line = transform(transformer.transform, right_line)
-    road_polygon = Polygon(np.concatenate([left_line.xy, np.fliplr(right_line.xy)], axis=1).T)
-    return road_polygon
 
 def check_point_on_road(args):
-    point_data, road_polygons, i = args
+    point_data, trajectories, i = args
     point = Point(point_data['lon'], point_data['lat'])
-    for road_polygon in road_polygons:
-        if road_polygon.contains(point):
+    for trajectory in trajectories:
+        road = LineString(trajectory)
+        if road.buffer(0.0002).contains(point):  # Adjust the buffer size as needed
             return (point_data['lon'], point_data['lat'], str(point_data['time']), i)
     return None
 
@@ -61,7 +64,7 @@ def plot_trajectories(trajectories, dict_data):
     plt.legend(handles=patches)
 
 if __name__ == "__main__":
-    file = './路网数据/西二环.txt'
+    file = './路网数据/东二环.txt'
     with open(file, 'r') as f:
         data = eval(f.read())
 
@@ -69,12 +72,11 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
-    road_polygons = [create_road_polygon(trajectory) for trajectory in data]
-
+    # 绘制道路
     for trajectory in data:
         plot_road(trajectory)
 
-    plot_trajectories(road_polygons, dict_data)
+    plot_trajectories(data, dict_data)
 
     plt.axis('equal')
     plt.show()
