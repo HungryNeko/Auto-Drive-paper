@@ -64,7 +64,7 @@ if __name__ == "__main__":
     with open(file, 'r') as f:
         data = eval(f.read())
 
-    readtxt('log.txt',wgs84=True)
+    readtxt('log.txt',full=True,wgs84=True)#full= log是否计算过
 
 
     road_polygons = [create_road_polygon(trajectory) for trajectory in data]
