@@ -62,11 +62,11 @@ def plot_trajectories(trajectories, dict_data):
     plt.legend(handles=patches)
 
 if __name__ == "__main__":
-    file = './路网数据/东三环北路.txt'
+    file = './路网数据/东四环中路.txt'
     with open(file, 'r') as f:
         data = eval(f.read())
 
-    readtxt('log-6656.txt')
+    #readtxt('log-6656.txt')
 
     fig, ax = plt.subplots(figsize=(10, 8))
 

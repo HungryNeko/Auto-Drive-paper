@@ -1,27 +1,12 @@
 import pyproj
 import numpy as np
 from tqdm import tqdm
-import matplotlib.cm as cm
-from functools import partial
+import seaborn as sns
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
 from shapely.ops import transform
 from read import readtxt, dict_data  # Assuming readtxt and dict_data functions are defined in the 'read' module
-import matplotlib.patches as mpatches
 from shapely.geometry import Point, LineString, Polygon
-
-def plot_road(trajectory, width=11.25, style='-', color='black'):
-    line = LineString(trajectory)
-    transformer = pyproj.Transformer.from_crs('epsg:4490', 'epsg:32650', always_xy=True)
-    line_transformed = transform(transformer.transform, line)
-    left_line = line_transformed.parallel_offset(width, 'left')
-    right_line = line_transformed.parallel_offset(width, 'right')
-    transformer = pyproj.Transformer.from_crs('epsg:32650', 'epsg:4490', always_xy=True)
-    left_line = transform(transformer.transform, left_line)
-    right_line = transform(transformer.transform, right_line)
-    ax.plot(*left_line.xy, style, color=color)
-    ax.plot(*right_line.xy, style, color=color)
-    # ax.plot(*line.xy, '--', color=color)  # 使用虚线绘制中心线
 
 def create_road_polygon(trajectory):
     line = LineString(trajectory)
@@ -38,48 +23,50 @@ def create_road_polygon(trajectory):
 def check_point_on_road(args):
     point_data, road_polygons = args
     point = Point(point_data['lon'], point_data['lat'])
-    for i, road_polygon in enumerate(road_polygons):
+    for road_polygon in road_polygons:
         if road_polygon.contains(point):
-            return (point_data['lon'], point_data['lat'], str(point_data['time']), i)
+            if angle==[]:
+                return (point_data['speed'], point_data['acceleration'], point_data['angle'])
+            if point_data['angle']>angle[0]&point_data['angle']<angle[1]:
+                return (point_data['speed'], point_data['acceleration'], point_data['angle'])
     return None
 
-
 def plot_trajectories(trajectories, dict_data):
-    colors = cm.rainbow(np.linspace(0, 1, len(dict_data)))
     args = []
-    patches = [] #图例
-    for i, (car_id, car_data) in enumerate(dict_data.items()):
-        car_color = colors[i % len(colors)]  # 使用取模运算确保颜色索引不超出范围
+    speed_data = []
+    acceleration_data = []
+    angle_data = []
+    for car_data in dict_data.values():
         for point_data in car_data:
-            args.append((point_data, trajectories))  # 传递一个元组，包含点数据和道路多边形列表
-        patches.append(mpatches.Patch(color=car_color, label=car_id))
+            args.append((point_data, trajectories))
 
     with Pool() as p:
         for result in tqdm(p.imap(check_point_on_road, args), total=len(args)):
             if result is not None:
-                lon, lat, time, i = result
-                ax.scatter(lon, lat, color=colors[i % len(colors)])  # 使用取模运算确保颜色索引不超出范围
+                speed, acceleration, angle = result
+                speed_data.append(speed)
+                acceleration_data.append(acceleration)
+                angle_data.append(angle)
 
-    plt.legend(handles=patches)
+    fig, axs = plt.subplots(3, 1, figsize=(10, 24))  # 创建一个3行1列的图形数组
 
-
-
+    sns.histplot(speed_data, bins=30, kde=True, ax=axs[0])  # 在第一个子图上绘制速度数据
+    sns.histplot(acceleration_data, bins=30, kde=True, ax=axs[1])  # 在第二个子图上绘制加速度数据
+    sns.histplot(angle_data, bins=30, kde=True, ax=axs[2])  # 在第三个子图上绘制角度数据
+    axs[0].set_title('speed distribution')
+    axs[1].set_title('acceleration distribution')
+    axs[2].set_title('angle distribution')
+    plt.show()
 
 if __name__ == "__main__":
-    file = './路网数据/东三环北路.txt'
+    angle=[90,270]#目标>angle[0] <angle[1]
+    file = './路网数据/东四环中路.txt'
     with open(file, 'r') as f:
         data = eval(f.read())
 
-    readtxt('log-temp.txt')
+    readtxt('log.txt',wgs84=True)
 
-    fig, ax = plt.subplots(figsize=(10, 8))
 
     road_polygons = [create_road_polygon(trajectory) for trajectory in data]
 
-    for trajectory in data:
-        plot_road(trajectory)
-
     plot_trajectories(road_polygons, dict_data)
-
-    plt.axis('equal')
-    plt.show()
