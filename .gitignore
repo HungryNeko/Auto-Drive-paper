@@ -5,3 +5,6 @@ log-gcj/log-gcj.txt
 error_data-gcj-c.txt
 error_data.txt
 *.txt
+error_data.txt
+error_data.txt
+.DS_Store
