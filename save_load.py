@@ -15,13 +15,14 @@ def savedata(data, filepath):
             f.write('\n')
 
 
+
 def loaddata(filepath):
-    data = []
+    loaded_data = []
     with open(filepath, 'r') as f:
-        for line in f:
-            entry = json.loads(line)
-            data.append(entry)
-    return data
+        loaded_data = [json.loads(line.strip()) for line in f]
+    return loaded_data
+
+
 def cleandata(filepath):
     try:
         with open(filepath, 'w') as f:
@@ -43,6 +44,7 @@ if __name__ == "__main__":
     savedata(t, 'testdata.txt')
 
     # 从文件中加载数据
-    loaded_data = loaddata('testdata.txt')
+    loaded_data = loaddata('data东四环中路.txt')
 
     print(loaded_data)
+
