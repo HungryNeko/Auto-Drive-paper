@@ -32,7 +32,7 @@ def loaddata(filepath):
                     entry = json.loads(line.strip().replace("'", '"'))
                     loaded_data.append(entry)
                 except Exception as e:
-                    print(f"加载数据时出错：{e}")
+                    #print(f"加载数据时出错：{e}")
                     pass
     return loaded_data
 

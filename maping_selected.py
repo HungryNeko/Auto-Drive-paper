@@ -59,7 +59,7 @@ def plot_trajectories(trajectories, datalist):
 anglelimit = [90.0, 270.0]  # 目标>angle[0] <angle[1]
 
 if __name__ == "__main__":
-    datalist = save_load.loaddata("data东四环中路_segmented_in_10min.txt")
+    datalist = save_load.loaddata("data东四环中路_segmented_in_2min.txt")
     #print(datalist)
     file = './路网数据/东四环中路.txt'
     with open(file, 'r') as f:

@@ -1,3 +1,6 @@
+"""
+筛选单位时间内最多id的时间段的数据，存入txt
+"""
 from datetime import datetime, timedelta
 import save_load
 
@@ -45,7 +48,7 @@ if __name__ == "__main__":
     data = save_load.loaddata("data东四环中路.txt")
 
     # 设置时间段大小（分钟）
-    segment_size = 10
+    segment_size = 2
 
     # 统计数据在每个时间段内的条数，找到数据量最多的时间段
     most_common_segment, most_common_count = count_data_in_time_segments(data, segment_size)
