@@ -16,16 +16,26 @@ def savedata(data, filepath):
 
 
 
+import json
+
 def loaddata(filepath):
     loaded_data = []
     with open(filepath, 'r') as f:
         for line in f:
             try:
+                # 尝试解析带有双引号的 JSON 字符串
                 entry = json.loads(line.strip())
                 loaded_data.append(entry)
-            except Exception as e:
-                print(f"加载数据时出错：{e}")
+            except json.JSONDecodeError:
+                try:
+                    # 如果解析失败，尝试解析带有单引号的 JSON 字符串
+                    entry = json.loads(line.strip().replace("'", '"'))
+                    loaded_data.append(entry)
+                except Exception as e:
+                    print(f"加载数据时出错：{e}")
+                    pass
     return loaded_data
+
 
 
 
