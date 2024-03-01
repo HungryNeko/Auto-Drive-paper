@@ -19,8 +19,14 @@ def savedata(data, filepath):
 def loaddata(filepath):
     loaded_data = []
     with open(filepath, 'r') as f:
-        loaded_data = [json.loads(line.strip()) for line in f]
+        for line in f:
+            try:
+                entry = json.loads(line.strip())
+                loaded_data.append(entry)
+            except Exception as e:
+                print(f"加载数据时出错：{e}")
     return loaded_data
+
 
 
 def cleandata(filepath):
