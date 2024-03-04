@@ -1,5 +1,9 @@
 import json
 import datetime
+
+from tqdm import tqdm
+
+
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
@@ -36,6 +40,42 @@ def loaddata(filepath):
                     pass
     return loaded_data
 
+
+def convert_data(loaded_data, full=False, limit=False):
+    dict_data = {}
+    count = 0
+    for entry in tqdm(loaded_data, desc="Converting data"):
+        count += 1
+        try:
+            lon, lat = float(entry['longitude']), float(entry['latitude'])
+            gcj = []
+
+
+            if full:
+                dict_data.setdefault(entry['id'], []).append({
+                    'id': entry['id'],
+                    'time': datetime.datetime.strptime(entry['time'], "%Y-%m-%d %H:%M:%S"),
+                    'lon': lon,
+                    'lat': lat,
+                    'speed': float(entry['speed']),
+                    'acceleration': float(entry['acceleration']),
+                    'angle': float(entry['angle'])
+                })
+            else:
+                dict_data.setdefault(entry['id'], []).append({
+                    'id': entry['id'],
+                    'time': datetime.datetime.strptime(entry['time'], "%Y-%m-%d %H:%M:%S"),
+                    'lon': lon,
+                    'lat': lat
+                })
+        except Exception as e:
+            # print(f"Error while processing entry: {entry}")
+            # print(e)
+            continue
+        if limit and count == limit:
+            break
+
+    return dict_data
 
 
 

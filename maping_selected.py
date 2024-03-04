@@ -38,7 +38,7 @@ def plot_trajectories(trajectories, datalist):
     angle_data = []
 
     with Pool() as p:
-        print("!")
+        #print("!")
         for result in check_point_on_road():
             if result is not None:
                 for speed, acceleration, angle in result:
